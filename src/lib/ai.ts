@@ -183,7 +183,7 @@ async function chat(
       return { ok: false as const, error: "The configured Gemini API key is invalid or unavailable." };
     }
     if (res.status === 404) {
-      return { ok: false as const, error: "The AI model endpoint is unavailable. Please redeploy the latest version." };
+      return { ok: false as const, error: "Gemini is unavailable for the configured API key. Replace GEMINI_API_KEY with a valid Google AI Studio key." };
     }
     return { ok: false as const, error: `AI error ${res.status}` };
   }
