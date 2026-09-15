@@ -158,14 +158,10 @@ export function entitlementsFrom(row: {
     (row.periodEnd == null || row.periodEnd > now);
 
   const plan: PlanId = activePaid ? (row.plan as PlanId) : "free";
-  const pro = plan === "pro" || plan === "pro_year";
-  const writer = plan === "writer";
-  const finish = row.finishCredits > 0;
-
-  // AI features are gated by subscription — only paying subscribers (or
-  // finish-credit buyers) get access. This is your revenue; keep it.
-  const aiLimit = pro ? null : writer ? 60 : finish ? 20 : 0;
-  const canAi = pro || writer || finish;
+  // AI tools are currently available to every account. Paid plans remain
+  // visible in pricing and checkout for the future upgrade path.
+  const aiLimit = null;
+  const canAi = true;
 
   return {
     plan,
@@ -174,14 +170,14 @@ export function entitlementsFrom(row: {
     finishCredits: row.finishCredits,
     aiUsed: row.aiUsed,
     aiLimit,
-    maxCvs: pro ? 10_000 : writer ? 10 : 2,
+    maxCvs: 10_000,
     canRewrite: canAi,
-    canReview: pro || writer,
-    canTailor: pro,
-    canCompose: pro || finish,
-    canScan: pro || writer,
-    canLetter: pro || finish,
-    allTemplates: pro || writer,
+    canReview: canAi,
+    canTailor: canAi,
+    canCompose: canAi,
+    canScan: canAi,
+    canLetter: canAi,
+    allTemplates: true,
   };
 }
 
