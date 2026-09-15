@@ -40,17 +40,26 @@ async function research(question: string, course: string) {
 async function generate(system: string, prompt: string) {
   const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!geminiKey) return { ok: false as const, error: "AI is not configured on this deployment." };
-  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.35, maxOutputTokens: 1800 },
-    }),
-  });
+  const requestBody = {
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.35, maxOutputTokens: 1800 },
+  };
+  let res: Response | null = null;
+  for (const model of ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]) {
+    res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey },
+      body: JSON.stringify(requestBody),
+    });
+    if (res.status !== 404) break;
+  }
+  if (!res) return { ok: false as const, error: "AI request could not be sent." };
   if (!res.ok) {
     if (res.status === 429) return { ok: false as const, error: "AI is busy right now — try again in a moment." };
+    if (res.status === 400 || res.status === 401 || res.status === 403) {
+      return { ok: false as const, error: "The configured Gemini API key is invalid or unavailable." };
+    }
     return { ok: false as const, error: `AI error ${res.status}` };
   }
   const body = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
