@@ -31,7 +31,7 @@ function AboutPage() {
             Use it only for lawful employment, study, and professional purposes.
           </p>
           <p>
-            Accounts are first-class. Create one with email and a password, or continue with Google or X. Drafts and
+            Accounts are first-class. Create one with email and a password, or continue with Google. Drafts and
             the plan you paid for are stored against that account so they are not forgotten when you change phones.
           </p>
           <p>

@@ -49,7 +49,7 @@ function Home() {
 
         <section className="border-y border-border bg-card/60">
           <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-3 sm:px-8">
-            <Step n="01" title="Create an account" body="Email and password, Google, or X. Drafts live on your account so they are not forgotten when you change phones." />
+            <Step n="01" title="Create an account" body="Use your email and password, or continue with Google. Drafts live on your account so they are not forgotten when you change phones." />
             <Step n="02" title="Write or finish with AI" body="Import a National ID photo, pick a Ugandan job category, and let the coach compile a complete page from your notes." />
             <Step n="03" title="Compile and send" body="Print to PDF. Official template carries photo, particulars, and referees the way panels in Kampala expect." />
           </div>

@@ -7,7 +7,7 @@
  * The app runs its own Better Auth at `/api/auth/*`, so the session cookie stays
  * on this app's own origin. Sign-in federates to the shared **Grok auth broker**
  * (`GROK_AUTH_ISSUER`) via the `genericOAuth` plugin — the broker brokers the
- * upstream sign-in methods (Google, X, …) and holds their shared secrets; this
+ * upstream sign-in methods (Google and others) and holds their shared secrets; this
  * app only holds its own client id/secret and names the upstream it wants via
  * each provider's `idp` hint.
  *
@@ -198,8 +198,9 @@ export const auth = betterAuth({
         ...GROK_PROVIDERS.map((p) => p.providerId),
         GATE_PROVIDER_ID,
       ],
-      // X's synthetic email is never "verified", so don't gate linking on the
-      // local user's email-verified state.
+  // Federated provider emails may not be verified, so don't gate linking on
+  // the local user's email-verified state.
+
       requireLocalEmailVerified: false,
     },
   },
