@@ -134,21 +134,11 @@ export const completeCheckout = createServerFn({ method: "POST" })
 
 export async function consumeAi(userId: string, kind: "rewrite" | "review" | "tailor" | "compose" | "scan" | "letter" | "interview" | "student") {
   const ents = await getEntitlements(userId);
-  const allowed =
-    (kind === "rewrite" && ents.canRewrite) ||
-    (kind === "review" && ents.canReview) ||
-    (kind === "tailor" && ents.canTailor) ||
-    (kind === "compose" && ents.canCompose) ||
-    (kind === "scan" && ents.canScan) ||
-    (kind === "letter" && ents.canLetter) ||
-    (kind === "interview" && ents.canReview) ||
-    (kind === "student" && (ents.canReview || ents.canRewrite));
-
+  // AI access is free for every account. Keep usage tracking for analytics,
+  // while leaving the payment and upgrade flows available for later use.
+  const allowed = Boolean(kind);
   if (!allowed) {
-    return { ok: false as const, error: "Upgrade to use this AI tool.", code: "upgrade" as const };
-  }
-  if (ents.aiLimit != null && ents.aiUsed >= ents.aiLimit) {
-    return { ok: false as const, error: "This month’s AI allowance is used. Upgrade Career Pro for unlimited.", code: "upgrade" as const };
+    return { ok: false as const, error: "This AI tool is unavailable.", code: "upgrade" as const };
   }
 
   const sql = await getSql();
