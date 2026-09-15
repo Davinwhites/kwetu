@@ -22,11 +22,31 @@ export function StudentLab() {
   const [busy, setBusy] = useState(false);
 
   async function submit() {
-    setBusy(true); setError(""); setResult(null);
-    const response = await runStudentAi({ data: { question, course, level, institution, mode } });
-    if (response.ok) setResult(response.student);
-    else setError(response.error);
-    setBusy(false);
+    const trimmedCourse = course.trim();
+    const trimmedQuestion = question.trim();
+    if (!trimmedCourse) {
+      setError("Choose a course or subject first.");
+      return;
+    }
+    if (trimmedQuestion.length < 8) {
+      setError("Ask a more specific question first.");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setResult(null);
+    try {
+      const response = await runStudentAi({
+        data: { question: trimmedQuestion, course: trimmedCourse, level, institution: institution.trim(), mode },
+      });
+      if (response.ok) setResult(response.student);
+      else setError(response.error);
+    } catch {
+      setError("The study assistant could not connect. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
