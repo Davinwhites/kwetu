@@ -57,6 +57,9 @@ async function generate(system: string, prompt: string) {
   if (!res) return { ok: false as const, error: "AI request could not be sent." };
   if (!res.ok) {
     if (res.status === 429) return { ok: false as const, error: "AI is busy right now — try again in a moment." };
+    if (res.status === 400 || res.status === 401 || res.status === 403) {
+      return { ok: false as const, error: "The configured Gemini API key is invalid or unavailable." };
+    }
     return { ok: false as const, error: `AI error ${res.status}` };
   }
   const body = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
