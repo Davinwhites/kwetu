@@ -38,22 +38,23 @@ async function research(question: string, course: string) {
 }
 
 async function generate(system: string, prompt: string) {
-  const res = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (!geminiKey) return { ok: false as const, error: "AI is not configured on this deployment." };
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [{ role: "system", content: system }, { role: "user", content: prompt }],
-      temperature: 0.35,
-      max_tokens: 1800,
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.35, maxOutputTokens: 1800 },
     }),
   });
   if (!res.ok) {
     if (res.status === 429) return { ok: false as const, error: "AI is busy right now — try again in a moment." };
     return { ok: false as const, error: `AI error ${res.status}` };
   }
-  const body = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  const text = body.choices?.[0]?.message?.content?.trim() ?? "";
+  const body = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+  const text = body.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("").trim() ?? "";
   return text ? { ok: true as const, text } : { ok: false as const, error: "Empty model response" };
 }
 
