@@ -25,6 +25,13 @@ export const authClient = createAuthClient({
       if (token) ctx.headers.set("Authorization", `Bearer ${token}`);
       return ctx;
     },
+    async onResponse(ctx) {
+      // Credential auth returns a token header as well as a cookie. The live
+      // preview runs in a cross-site iframe, so capture the header and reuse it
+      // as a bearer token when the browser cannot send the cookie.
+      const token = ctx.response.headers.get("set-auth-token");
+      if (token) setBearerToken(token);
+    },
   },
 });
 
