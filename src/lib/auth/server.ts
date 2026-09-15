@@ -99,14 +99,38 @@ const previewAllowedHosts: string[] = [...PREVIEW_ALLOWED_HOSTS];
 // these for the same server — trusting only `localhost` rejects `127.0.0.1` and
 // breaks email/password with "Invalid origin".
 const LOCAL_DEV_ORIGINS: string[] = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:4173",
+  "http://localhost:5173",
   "http://localhost:8080",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:3001",
+  "http://127.0.0.1:4173",
+  "http://127.0.0.1:5173",
   "http://127.0.0.1:8080",
+  "http://[::1]:3000",
   "http://[::1]:8080",
+  "https://v0.dev",
+  "https://v0.app",
 ];
+const RUNTIME_ORIGINS: string[] = [
+  env("V0_RUNTIME_URL"),
+  env("V0_DEV_APP_URL"),
+  env("V0_BUILD_URL"),
+  env("V0_SANDBOX_URL"),
+].filter((origin): origin is string => Boolean(origin));
+const RUNTIME_HOSTS = RUNTIME_ORIGINS.map((origin) => {
+  try {
+    return new URL(origin).hostname;
+  } catch {
+    return null;
+  }
+}).filter((host): host is string => Boolean(host));
 const baseURL = explicitBaseURL ?? {
   // Include loopback hosts so dynamic baseURL resolves for local email/password
   // (not only the preview wildcard).
-  allowedHosts: [...previewAllowedHosts, "localhost", "127.0.0.1", "[::1]"],
+  allowedHosts: [...previewAllowedHosts, ...RUNTIME_HOSTS, "localhost", "127.0.0.1", "[::1]"],
   // `auto` → trust both http:// and https:// expansions of allowedHosts
   // (preview is https; local dev is http).
   protocol: "auto" as const,
@@ -122,6 +146,7 @@ const trustedOrigins: string[] = explicitBaseURL
       ...previewAllowedHosts,
       // Full-origin wildcards (matched against Origin)
       ...previewAllowedHosts.flatMap((host) => [`https://${host}`, `http://${host}`]),
+      ...RUNTIME_ORIGINS,
       ...LOCAL_DEV_ORIGINS,
     ];
 
@@ -223,7 +248,11 @@ export const auth = betterAuth({
   // `http://localhost`, so local dev still works.)
   advanced: {
     useSecureCookies: false,
-    defaultCookieAttributes: { secure: true, sameSite: "lax", path: "/" },
+    defaultCookieAttributes: {
+      secure: true,
+      sameSite: process.env.NODE_ENV === "development" ? "none" : "lax",
+      path: "/",
+    },
     cookies: {
       session_token: { name: SESSION_TOKEN_COOKIE },
       session_data: { name: "__Host-grok-auth.session_data" },
