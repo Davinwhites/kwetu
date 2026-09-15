@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
+import { UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { Wordmark } from "@/components/cv/wordmark";
 import { Button } from "@/components/ui/button";
