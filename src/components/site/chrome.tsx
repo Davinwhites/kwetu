@@ -85,6 +85,7 @@ export function SiteFooter() {
             Student lab
           </Link>
         </div>
+        <p className="text-xs text-muted-foreground sm:self-end">Made by Ayesiga Davin</p>
       </div>
     </footer>
   );
