@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Check, Copy, Download } from "lucide-react";
 import { runStudentAi, type StudentResult } from "@/lib/student-ai";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +21,40 @@ export function StudentLab() {
   const [result, setResult] = useState<StudentResult | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [downloadFormat, setDownloadFormat] = useState("txt");
+  const [copied, setCopied] = useState(false);
+
+  function outputText() {
+    if (!result) return "";
+    const sources = result.sources.length
+      ? `\n\nSources:\n${result.sources.map((source) => `- ${source.title}: ${source.url}`).join("\n")}`
+      : "\n\nSources: No live sources were available.";
+    return `${result.answer}\n\n${result.notice ?? ""}${sources}`.trim();
+  }
+
+  async function copyAnswer() {
+    await navigator.clipboard.writeText(outputText());
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  }
+
+  function downloadAnswer() {
+    const text = outputText();
+    const title = `${course.trim() || "study-answer"}`.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "study-answer";
+    const formats: Record<string, { extension: string; type: string; content: string }> = {
+      txt: { extension: "txt", type: "text/plain;charset=utf-8", content: text },
+      md: { extension: "md", type: "text/markdown;charset=utf-8", content: `# ${course}\n\n${text}` },
+      html: { extension: "html", type: "text/html;charset=utf-8", content: `<!doctype html><meta charset="utf-8"><title>${course}</title><pre style="white-space:pre-wrap;font:16px system-ui">${text.replace(/[&<>]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[char] ?? char)}</pre>` },
+      doc: { extension: "doc", type: "application/msword", content: `<html><body><h1>${course}</h1><pre>${text.replace(/[&<>]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[char] ?? char)}</pre></body></html>` },
+    };
+    const format = formats[downloadFormat] ?? formats.txt;
+    const url = URL.createObjectURL(new Blob([format.content], { type: format.type }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${title}.${format.extension}`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   async function submit() {
     const trimmedCourse = course.trim();
@@ -71,7 +106,7 @@ export function StudentLab() {
           <Textarea value={question} onChange={(e) => setQuestion(e.target.value)} className="mt-2 min-h-56 resize-y" placeholder="Ask a specific question, paste a paragraph for feedback, or share a small code snippet..." />
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-subtle">Tip: include the exact topic, requirements, and what you have tried.</p><Button onClick={submit} disabled={busy || !course || question.trim().length < 8}>{busy ? "Researching..." : "Get study help"}</Button></div>
           {error ? <p role="alert" className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p> : null}
-          {result ? <article className="mt-8 border-t border-border pt-6"><div className="whitespace-pre-wrap text-sm leading-7">{result.answer}</div><p className="mt-6 rounded-lg bg-surface p-3 text-xs text-muted">{result.notice}</p>{result.sources.length ? <div className="mt-6"><h3 className="font-medium">Research leads</h3><ul className="mt-2 space-y-2">{result.sources.map((source) => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">{source.title}</a><p className="text-xs text-subtle">{source.snippet}</p></li>)}</ul></div> : null}</article> : null}
+          {result ? <article className="mt-8 border-t border-border pt-6"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-display text-2xl font-medium">Study answer</h2><div className="flex flex-wrap items-center gap-2"><Button type="button" variant="outline" size="sm" onClick={copyAnswer}>{copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}{copied ? "Copied" : "Copy"}</Button><select aria-label="Download format" value={downloadFormat} onChange={(event) => setDownloadFormat(event.target.value)} className="h-9 rounded-md border border-input bg-background px-2 text-sm"><option value="txt">Text (.txt)</option><option value="md">Markdown (.md)</option><option value="html">Web page (.html)</option><option value="doc">Word document (.doc)</option></select><Button type="button" size="sm" onClick={downloadAnswer}><Download data-icon="inline-start" />Download</Button></div></div><div className="mt-5 whitespace-pre-wrap text-sm leading-7">{result.answer}</div><p className="mt-6 rounded-lg bg-surface p-3 text-xs text-muted">{result.notice}</p>{result.sources.length ? <div className="mt-6"><h3 className="font-medium">Sources</h3><ul className="mt-2 space-y-2">{result.sources.map((source) => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">{source.title}</a><p className="text-xs text-subtle">{source.snippet}</p></li>)}</ul></div> : <p className="mt-6 text-xs text-subtle">No live sources were available for this answer. Verify important claims using your library or lecturer.</p>}</article> : null}
         </section>
       </div>
     </main>
