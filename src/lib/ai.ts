@@ -159,29 +159,27 @@ async function chat(
     }
   }
 
-  const res = await fetch(
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
+  const requestBody = {
+    system_instruction: { parts: [{ text: system }] },
+    contents: [{ role: "user", parts }],
+    generationConfig: { temperature: 0.4, maxOutputTokens: maxTokens },
+  };
+  let res: Response | undefined;
+  for (const model of ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"]) {
+    res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+        body: JSON.stringify(requestBody),
       },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: system }] },
-        contents: [{ role: "user", parts }],
-        generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: maxTokens,
-        },
-      }),
-    },
-  );
-  if (!res.ok) {
-    if (res.status === 429) {
-      return { ok: false as const, error: "AI is busy right now — try again in a moment." };
-    }
-    return { ok: false as const, error: `AI error ${res.status}` };
+    );
+    if (res.status !== 404) break;
+  }
+  if (!res?.ok) {
+    if (res?.status === 429) return { ok: false as const, error: "AI is busy right now — try again in a moment." };
+    if (res?.status === 401 || res?.status === 403) return { ok: false as const, error: "The AI service rejected its configured key." };
+    return { ok: false as const, error: `AI error ${res?.status ?? 502}` };
   }
   const body = (await res.json()) as {
     candidates?: { content?: { parts?: { text?: string }[] } }[];
