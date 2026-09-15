@@ -60,6 +60,9 @@ async function generate(system: string, prompt: string) {
     if (res.status === 400 || res.status === 401 || res.status === 403) {
       return { ok: false as const, error: "The configured Gemini API key is invalid or unavailable." };
     }
+    if (res.status === 404) {
+      return { ok: false as const, error: "The AI model endpoint is unavailable. Please redeploy the latest version." };
+    }
     return { ok: false as const, error: `AI error ${res.status}` };
   }
   const body = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
