@@ -141,51 +141,28 @@ async function chat(
   maxTokens: number,
   image?: string,
 ) {
-  // Google Gemini's free tier (Gemini 2.5 Flash), called on the *native*
-  // endpoint. Google's newer "Auth key" format (issued by default since
-  // mid-2026, prefixed "AQ.") is rejected by the OpenAI-compatibility shim
-  // (401 ACCESS_TOKEN_TYPE_UNSUPPORTED) — only the native generateContent
-  // endpoint accepts it, so that's what this calls. Works the same for
-  // older "AIza..." keys too. Get a key with no card at
-  // https://aistudio.google.com — set it as GEMINI_API_KEY.
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return { ok: false as const, error: "AI is not available in this environment" };
-
-  const parts: Record<string, unknown>[] = [{ text: user }];
+  const parts: Record<string, unknown>[] = [{ type: "text", text: user }];
   if (image) {
     const match = image.match(/^data:([^;]+);base64,(.+)$/);
-    if (match) {
-      parts.push({ inline_data: { mime_type: match[1], data: match[2] } });
-    }
+    if (match) parts.push({ type: "image_url", image_url: { url: image } });
   }
 
-  const requestBody = {
-    system_instruction: { parts: [{ text: system }] },
-    contents: [{ role: "user", parts }],
-    generationConfig: { temperature: 0.4, maxOutputTokens: maxTokens },
-  };
-  let res: Response | undefined;
-  for (const model of ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"]) {
-    res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-        body: JSON.stringify(requestBody),
-      },
-    );
-    if (res.status !== 404) break;
+  const res = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [{ role: "system", content: system }, { role: "user", content: parts }],
+      temperature: 0.4,
+      max_tokens: maxTokens,
+    }),
+  });
+  if (!res.ok) {
+    if (res.status === 429) return { ok: false as const, error: "AI is busy right now — try again in a moment." };
+    return { ok: false as const, error: `AI error ${res.status}` };
   }
-  if (!res?.ok) {
-    if (res?.status === 429) return { ok: false as const, error: "AI is busy right now — try again in a moment." };
-    if (res?.status === 401 || res?.status === 403) return { ok: false as const, error: "The AI service rejected its configured key." };
-    return { ok: false as const, error: `AI error ${res?.status ?? 502}` };
-  }
-  const body = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
-  };
-  const text =
-    body.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("").trim() ?? "";
+  const body = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+  const text = body.choices?.[0]?.message?.content?.trim() ?? "";
   if (!text) return { ok: false as const, error: "Empty model response" };
   return { ok: true as const, text };
 }
