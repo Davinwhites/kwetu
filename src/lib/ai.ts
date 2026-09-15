@@ -147,22 +147,40 @@ async function chat(
     if (match) parts.push({ type: "image_url", image_url: { url: image } });
   }
 
-  const res = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [{ role: "system", content: system }, { role: "user", content: parts }],
-      temperature: 0.4,
-      max_tokens: maxTokens,
-    }),
-  });
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  const gatewayKey = process.env.AI_GATEWAY_API_KEY;
+  const res = geminiKey
+    ? await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: system }] },
+          contents: [{ role: "user", parts }],
+          generationConfig: { temperature: 0.4, maxOutputTokens: maxTokens },
+        }),
+      })
+    : gatewayKey
+      ? await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${gatewayKey}` },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [{ role: "system", content: system }, { role: "user", content: parts }],
+            temperature: 0.4,
+            max_tokens: maxTokens,
+          }),
+        })
+      : null;
+  if (!res) return { ok: false as const, error: "AI is not configured on this deployment." };
   if (!res.ok) {
     if (res.status === 429) return { ok: false as const, error: "AI is busy right now — try again in a moment." };
     return { ok: false as const, error: `AI error ${res.status}` };
   }
-  const body = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  const text = body.choices?.[0]?.message?.content?.trim() ?? "";
+  const body = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  };
+  const text = body.choices?.[0]?.message?.content?.trim() ?? body.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("").trim() ?? "";
   if (!text) return { ok: false as const, error: "Empty model response" };
   return { ok: true as const, text };
 }
