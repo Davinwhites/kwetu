@@ -1,0 +1,128 @@
+import type { CV } from "./types";
+
+export const SAMPLE_CV: CV = {
+  id: "sample",
+  name: "Namukasa Rebecca — MEL Officer",
+  template: "official",
+  category: "ngo",
+  updatedAt: Date.now(),
+  personal: {
+    fullName: "Namukasa Rebecca",
+    title: "Monitoring, Evaluation & Learning Officer",
+    email: "r.namukasa@email.com",
+    phone: "+256 772 441 890",
+    location: "Kampala, Uganda",
+    website: "",
+    linkedin: "linkedin.com/in/rebeccanamukasa",
+    github: "",
+    nationality: "Ugandan",
+    dateOfBirth: "12 March 1994",
+    nin: "",
+    gender: "Female",
+    photoDataUrl: "",
+  },
+  summary:
+    "Monitoring, evaluation and learning officer with seven years across health, education and livelihoods programmes in Uganda. Designs indicator frameworks, leads baseline and endline studies, and writes donor reports that programme teams actually use. Comfortable in Luganda and English, in Kampala offices and in the field.",
+  experience: [
+    {
+      id: "exp-1",
+      company: "BRAC Uganda",
+      role: "Monitoring, Evaluation & Learning Officer",
+      location: "Kampala · field travel",
+      start: "2021",
+      end: "",
+      current: true,
+      bullets: [
+        "Led MEAL for a UGX 4.8 billion livelihoods programme reaching 18,400 households across 9 districts.",
+        "Cut report turnaround from 21 days to 6 by rebuilding the indicator dashboard in Excel and Kobo.",
+        "Trained 42 field officers on data quality; verification error rate dropped from 14% to 3% in two quarters.",
+      ],
+    },
+    {
+      id: "exp-2",
+      company: "Ministry of Health — AHSPR support unit",
+      role: "M&E Associate",
+      location: "Kampala",
+      start: "2018",
+      end: "2021",
+      current: false,
+      bullets: [
+        "Compiled quarterly HMIS summaries used in the Annual Health Sector Performance Report.",
+        "Supported 11 DHTs in West Nile to close data gaps ahead of the 2019/20 joint review.",
+      ],
+    },
+    {
+      id: "exp-3",
+      company: "Straight Talk Foundation",
+      role: "Programme Assistant",
+      location: "Kampala",
+      start: "2016",
+      end: "2018",
+      current: false,
+      bullets: [
+        "Coordinated youth outreach in 6 schools, documenting attendance and safeguarding incidents for the donor file.",
+      ],
+    },
+  ],
+  education: [
+    {
+      id: "edu-1",
+      school: "Makerere University",
+      degree: "M.A.",
+      field: "Monitoring & Evaluation",
+      start: "2019",
+      end: "2021",
+      details: "Dissertation on district health data use",
+    },
+    {
+      id: "edu-2",
+      school: "Makerere University",
+      degree: "B.A.",
+      field: "Social Sciences",
+      start: "2012",
+      end: "2015",
+      details: "Upper second",
+    },
+  ],
+  projects: [],
+  skills: [
+    {
+      id: "sk-1",
+      category: "MEAL",
+      items: "Kobo, DHIS2, SPSS, Excel dashboards, theory of change, outcome harvesting",
+    },
+    {
+      id: "sk-2",
+      category: "Programme",
+      items: "Donor reporting (USAID, FCDO, EU), safeguarding, community mobilisation",
+    },
+    {
+      id: "sk-3",
+      category: "Languages",
+      items: "English, Luganda, basic Luo",
+    },
+  ],
+  extras: [
+    { id: "ex-1", label: "Computer packages", value: "MS Office, Google Workspace, Kobo Toolbox" },
+    { id: "ex-2", label: "Availability", value: "Immediate · willing to travel" },
+  ],
+  referees: [
+    {
+      id: "ref-1",
+      name: "Dr. Okello Patrick",
+      title: "Programme Manager",
+      organisation: "BRAC Uganda",
+      phone: "+256 701 220 118",
+      email: "p.okello@brac.ug",
+    },
+    {
+      id: "ref-2",
+      name: "Ms. Atim Sarah",
+      title: "Senior M&E Advisor",
+      organisation: "Ministry of Health",
+      phone: "+256 772 903 441",
+      email: "sarah.atim@health.go.ug",
+    },
+  ],
+  coverLetter: "",
+};

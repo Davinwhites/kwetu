@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>KwetuCV</title>
+    <style>
+      @font-face {
+        font-family: "Source Serif";
+        src: url("SourceSerif4-Semibold.otf") format("opentype");
+        font-weight: 600;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: "Source Serif";
+        src: url("SourceSerif4-Regular.otf") format("opentype");
+        font-weight: 400;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: "Source Serif";
+        src: url("SourceSerif4-It.otf") format("opentype");
+        font-weight: 400;
+        font-style: italic;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: #f3eee4;
+      }
+      .stage {
+        width: 1200px;
+        height: 630px;
+        position: relative;
+        background: #f3eee4 url("paper.jpg") center / cover no-repeat;
+      }
+      .lockup {
+        position: absolute;
+        left: 86px;
+        top: 0;
+        height: 630px;
+        width: 620px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .wordmark {
+        font-family: "Source Serif", Georgia, serif;
+        font-weight: 600;
+        font-size: 124px;
+        line-height: 0.9;
+        color: #1b4a3a;
+        letter-spacing: -0.028em;
+        font-kerning: normal;
+      }
+      .rule {
+        width: 72px;
+        height: 4px;
+        background: #1b4a3a;
+        margin: 26px 0 18px 3px;
+      }
+      .studio {
+        font-family: "Source Serif", Georgia, serif;
+        font-style: italic;
+        font-weight: 400;
+        font-size: 22px;
+        color: #1c1915;
+        opacity: 0.58;
+        letter-spacing: 0.02em;
+      }
+      .page {
+        position: absolute;
+        right: -48px;
+        top: 46px;
+        width: 428px;
+        height: 620px;
+        background: #fffcf6;
+        box-shadow:
+          0 28px 64px rgba(28, 25, 21, 0.16),
+          0 2px 6px rgba(28, 25, 21, 0.06);
+        padding: 54px 46px 40px;
+        transform: rotate(1.15deg);
+      }
+      .page-name {
+        font-family: "Source Serif", Georgia, serif;
+        font-weight: 600;
+        font-size: 30px;
+        color: #1c1915;
+        letter-spacing: -0.015em;
+        line-height: 1.05;
+      }
+      .page-role {
+        font-family: "Source Serif", Georgia, serif;
+        font-style: italic;
+        font-size: 16px;
+        color: #1c1915;
+        opacity: 0.62;
+        margin-top: 8px;
+      }
+      .name-rule {
+        height: 3px;
+        width: 100%;
+        background: #1b4a3a;
+        margin: 16px 0 12px;
+      }
+      .contact {
+        font-family: "Source Serif", Georgia, serif;
+        font-size: 13.5px;
+        letter-spacing: 0.045em;
+        color: #1c1915;
+        opacity: 0.7;
+      }
+      .section {
+        margin-top: 30px;
+      }
+      .section h3 {
+        font-family: "Source Serif", Georgia, serif;
+        font-weight: 600;
+        font-size: 11px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: #1b4a3a;
+        margin-bottom: 12px;
+      }
+      .bar {
+        height: 7px;
+        background: #1c1915;
+        opacity: 0.09;
+        margin-bottom: 9px;
+        border-radius: 1px;
+      }
+      .bar.short {
+        width: 62%;
+      }
+      .bar.mid {
+        width: 84%;
+      }
+      .job {
+        margin-bottom: 16px;
+      }
+      .job-title {
+        font-family: "Source Serif", Georgia, serif;
+        font-weight: 600;
+        font-size: 13px;
+        color: #1c1915;
+        opacity: 0.82;
+      }
+      .job-meta {
+        font-family: "Source Serif", Georgia, serif;
+        font-size: 12px;
+        color: #1c1915;
+        opacity: 0.45;
+        margin: 3px 0 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="lockup">
+        <div class="wordmark">KwetuCV</div>
+        <div class="rule"></div>
+        <div class="studio">A quiet studio for the page that speaks for you.</div>
+      </div>
+      <article class="page" aria-hidden="true">
+        <div class="page-name">Akello Namuganyi</div>
+        <div class="page-role">Research officer</div>
+        <div class="name-rule"></div>
+        <div class="contact">Kampala · +256 700 000000 · akello@mail.ug</div>
+        <div class="section">
+          <h3>Experience</h3>
+          <div class="job">
+            <div class="job-title">Policy associate</div>
+            <div class="job-meta">Kampala · 2021 — Present</div>
+            <div class="bar"></div>
+            <div class="bar mid"></div>
+            <div class="bar short"></div>
+          </div>
+          <div class="job">
+            <div class="job-title">Programme fellow</div>
+            <div class="job-meta">Makerere · 2018 — 2021</div>
+            <div class="bar mid"></div>
+            <div class="bar short"></div>
+          </div>
+        </div>
+        <div class="section">
+          <h3>Education</h3>
+          <div class="bar"></div>
+          <div class="bar mid"></div>
+        </div>
+      </article>
+    </div>
+  </body>
+</html>

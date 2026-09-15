@@ -1,0 +1,40 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "KwetuCV",
+      "hasCanvas": false,
+      "bodyTextLen": 4758,
+      "bodyTextHash": "482a583d33246f6c6a1708b8e9303dbfcae67592354a926f3c7c551657e5308c",
+      "bodyTextPrefix": "KwetuCV UGANDA Pricing About Sign in Create account KAMPALA · UG",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [
+        "Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\nhttps://react.dev/link/hydration-mismatch\n\n  ...\n    <MatchImpl routeId=\"/\">\n      <MatchView router={{...}} match={{id:\"//\",ssr:true, ...}}>\n        <SafeFragment>\n          <SafeFragment fallback={null}>\n            <CatchBoundary getResetKey={function getResetKey} errorComponent={function AppErrorComponent} ...>\n              <SafeFragment fallback={function fallback}>\n                <MatchInnerImpl match={{id:\"//\",ssr:true, ...}}>\n                  <Lazy>\n                    <Home>\n                      <div className=\"min-h-dvh ...\">\n                        <SiteHeader>\n                          <header className=\"no-print b...\">\n                            <div className=\"mx-auto fl...\">\n                              <Wordmark>\n                              <nav>\n                              <AuthSlot>\n                                <div\n+                                 className=\"flex items-center gap-2\"\n-                                 className=\"h-9 w-28 animate-pulse rounded-full bg-surface\"\n                                >\n                                  <_c size=\"sm\" variant=\"ghost\" asChild={true}>\n                                    <Slot.Slot className={\"inline-f...\"} ref={null}>\n+                                     <a\n+                                       href=\"/login\"\n+                                       ref={{current:null}}\n+                                       onClick={function}\n+                                       onBlur={function}\n+                                       onFocus={function}\n+                                       onMouseEnter={function}\n+                                       onMouseLeave={function}\n+                                       onTouchStart={function}\n+                                       target={undefined}\n+                                       className={\"inline-flex items-center justify-center gap-2 whitespace-nowrap f...\"}\n+                                     >\n                                  ...\n                        ...\n"
+      ],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "KwetuCV",
+      "hasCanvas": false,
+      "bodyTextLen": 4737,
+      "bodyTextHash": "af144fe43e813ce874d7ae323de081295017f50b860e5a0a952c96e70176347b",
+      "bodyTextPrefix": "KwetuCV Sign in Create account KAMPALA · UGX · MOBILE MONEY The ",
+      "horizontalOverflow": true,
+      "consoleErrors": [],
+      "pageErrors": [
+        "Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\nhttps://react.dev/link/hydration-mismatch\n\n  ...\n    <MatchImpl routeId=\"/\">\n      <MatchView router={{...}} match={{id:\"//\",ssr:true, ...}}>\n        <SafeFragment>\n          <SafeFragment fallback={null}>\n            <CatchBoundary getResetKey={function getResetKey} errorComponent={function AppErrorComponent} ...>\n              <SafeFragment fallback={function fallback}>\n                <MatchInnerImpl match={{id:\"//\",ssr:true, ...}}>\n                  <Lazy>\n                    <Home>\n                      <div className=\"min-h-dvh ...\">\n                        <SiteHeader>\n                          <header className=\"no-print b...\">\n                            <div className=\"mx-auto fl...\">\n                              <Wordmark>\n                              <nav>\n                              <AuthSlot>\n                                <div\n+                                 className=\"flex items-center gap-2\"\n-                                 className=\"h-9 w-28 animate-pulse rounded-full bg-surface\"\n                                >\n                                  <_c size=\"sm\" variant=\"ghost\" asChild={true}>\n                                    <Slot.Slot className={\"inline-f...\"} ref={null}>\n+                                     <a\n+                                       href=\"/login\"\n+                                       ref={{current:null}}\n+                                       onClick={function}\n+                                       onBlur={function}\n+                                       onFocus={function}\n+                                       onMouseEnter={function}\n+                                       onMouseLeave={function}\n+                                       onTouchStart={function}\n+                                       target={undefined}\n+                                       className={\"inline-flex items-center justify-center gap-2 whitespace-nowrap f...\"}\n+                                     >\n                                  ...\n                        ...\n"
+      ],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}
