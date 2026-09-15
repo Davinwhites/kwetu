@@ -46,7 +46,7 @@ async function generate(system: string, prompt: string) {
     generationConfig: { temperature: 0.35, maxOutputTokens: 1800 },
   };
   let res: Response | null = null;
-  for (const model of ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]) {
+  for (const model of ["gemma-4-26b-a4b-it", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]) {
     res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey },
