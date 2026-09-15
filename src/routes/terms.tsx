@@ -27,7 +27,7 @@ function TermsPage() {
             account. Paid periods do not auto-extend in this studio unless you pay again.
           </p>
           <p>
-            Accounts are stored so you can return. Keep your password. If you sign in with Google or X, that provider’s
+            Accounts are stored so you can return. Keep your password. If you sign in with Google, that provider’s
             terms also apply. We may suspend accounts used for fraud or abuse.
           </p>
           <p>
