@@ -119,14 +119,22 @@ const RUNTIME_ORIGINS: string[] = [
   env("V0_DEV_APP_URL"),
   env("V0_BUILD_URL"),
   env("V0_SANDBOX_URL"),
+  env("VERCEL_URL") ? `https://${env("VERCEL_URL")}` : undefined,
+  env("VERCEL_PROJECT_PRODUCTION_URL") ? `https://${env("VERCEL_PROJECT_PRODUCTION_URL")}` : undefined,
 ].filter((origin): origin is string => Boolean(origin));
-const RUNTIME_HOSTS = RUNTIME_ORIGINS.map((origin) => {
+
+function exactOrigin(value: string): string | null {
   try {
-    return new URL(origin).hostname;
+    return new URL(value).origin;
   } catch {
     return null;
   }
-}).filter((host): host is string => Boolean(host));
+}
+
+const EXACT_RUNTIME_ORIGINS = RUNTIME_ORIGINS.map(exactOrigin).filter(
+  (origin): origin is string => Boolean(origin),
+);
+const RUNTIME_HOSTS = EXACT_RUNTIME_ORIGINS.map((origin) => new URL(origin).hostname);
 const baseURL = explicitBaseURL ?? {
   // Include loopback hosts so dynamic baseURL resolves for local email/password
   // (not only the preview wildcard).
@@ -139,16 +147,17 @@ const baseURL = explicitBaseURL ?? {
 
 // Origins Better Auth accepts on credentialed POSTs (sign-up/sign-in, etc.).
 // Missing entries here surface as FORBIDDEN "Invalid origin".
-const trustedOrigins: string[] = explicitBaseURL
-  ? [explicitBaseURL, ...LOCAL_DEV_ORIGINS]
-  : [
-      // Host wildcards (matched against Origin's host)
-      ...previewAllowedHosts,
-      // Full-origin wildcards (matched against Origin)
-      ...previewAllowedHosts.flatMap((host) => [`https://${host}`, `http://${host}`]),
-      ...RUNTIME_ORIGINS,
-      ...LOCAL_DEV_ORIGINS,
-    ];
+const trustedOrigins: string[] = [
+  // Normalize configured URLs to origins so a trailing slash or path cannot
+  // make Better Auth reject the browser's Origin header.
+  ...(explicitBaseURL ? [exactOrigin(explicitBaseURL)] : []),
+  ...EXACT_RUNTIME_ORIGINS,
+  // Host wildcards (matched against Origin's host)
+  ...previewAllowedHosts,
+  // Full-origin wildcards (matched against Origin)
+  ...previewAllowedHosts.flatMap((host) => [`https://${host}`, `http://${host}`]),
+  ...LOCAL_DEV_ORIGINS,
+].filter((origin): origin is string => Boolean(origin));
 
 const databaseUrl = env("DATABASE_URL");
 
