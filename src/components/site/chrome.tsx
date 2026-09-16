@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
@@ -6,7 +7,13 @@ import { Button } from "@/components/ui/button";
 
 export function AuthSlot() {
   const { user, isPending } = useCurrentUserState();
-  if (isPending) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || isPending) {
     return <div className="h-9 w-28 animate-pulse rounded-full bg-surface" />;
   }
   if (user) {
@@ -85,6 +92,7 @@ export function SiteFooter() {
             Student lab
           </Link>
         </div>
+        <p className="text-xs text-muted-foreground sm:self-end">Made by Ayesiga Davin</p>
       </div>
     </footer>
   );

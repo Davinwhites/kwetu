@@ -8,6 +8,7 @@ type StudentInput = {
   level: string;
   institution?: string;
   mode: "research" | "explain" | "coursework" | "code";
+  image?: { mimeType: string; data: string; name: string };
 };
 
 type Source = { title: string; url: string; snippet: string };
@@ -37,12 +38,14 @@ async function research(question: string, course: string) {
   return sources.slice(0, 3);
 }
 
-async function generate(system: string, prompt: string) {
+async function generate(system: string, prompt: string, image?: StudentInput["image"]) {
   const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!geminiKey) return { ok: false as const, error: "AI is not configured on this deployment." };
+  const userParts: { text?: string; inlineData?: { mimeType: string; data: string } }[] = [{ text: prompt }];
+  if (image) userParts.push({ inlineData: { mimeType: image.mimeType, data: image.data } });
   const requestBody = {
     systemInstruction: { parts: [{ text: system }] },
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    contents: [{ role: "user", parts: userParts }],
     generationConfig: { temperature: 0.35, maxOutputTokens: 1800 },
   };
   let res: Response | null = null;
@@ -75,13 +78,14 @@ export const runStudentAi = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .handler(async ({ context, data }) => {
     const question = data.question.trim().slice(0, 5000);
-    if (question.length < 8) return { ok: false as const, error: "Ask a more specific question first." };
+    if (question.length < 8 && !data.image) return { ok: false as const, error: "Ask a question or upload an image to review first." };
+    if (data.image && (!data.image.mimeType.startsWith("image/") || data.image.data.length > 8_000_000)) return { ok: false as const, error: "Use an image under 6 MB." };
     const gate = await consumeAi(context.userId, "student");
     if (!gate.ok) return gate;
     const sources = data.mode === "research" || data.mode === "coursework" ? await research(question, data.course) : [];
     const sourceContext = sources.length ? `Verified research leads (cite only these when relevant):\n${sources.map((s) => `- ${s.title}: ${s.snippet} (${s.url})`).join("\n")}` : "No live sources were available; be transparent and rely on established knowledge.";
-    const guardrail = "You are a university study assistant. Help the student learn; do not impersonate a student, fabricate citations, or complete graded work dishonestly. You may explain concepts, outline answers, review drafts, and provide small focused code examples. Refuse requests to build a complete website or app, and instead offer a scoped learning exercise. Never claim live verification beyond the supplied sources.";
-    const result = await generate(`${guardrail} Course: ${data.course}. Level: ${data.level}. Institution: ${data.institution || "not provided"}. Mode: ${data.mode}. Use clear headings, examples, and British English. ${sourceContext}`, question);
+    const guardrail = "You are a university study assistant. Help the student learn; do not impersonate a student, fabricate citations, or complete graded work dishonestly. You may explain concepts, outline answers, review drafts, and provide small focused code examples. Refuse requests to build a complete website or app, and instead offer a scoped learning exercise. Never claim live verification beyond the supplied sources. If sources are supplied, cite them clearly inline using [1], [2], and so on, and end with a Sources section that lists only the supplied URLs. If no sources are supplied, say that no live sources were available instead of inventing citations.";
+    const result = await generate(`${guardrail} Course: ${data.course}. Level: ${data.level}. Institution: ${data.institution || "not provided"}. Mode: ${data.mode}. Use clear headings, examples, and British English. ${data.image ? "Review the uploaded image carefully and follow the student's instructions about it. Describe uncertainty when text or details are unreadable." : ""} ${sourceContext}`, question || "Review the uploaded image and explain what is important for my course.", data.image);
     if (!result.ok) return result;
     return { ok: true as const, kind: "student" as const, student: { answer: result.text, sources, notice: sources.length ? "Answer informed by live research leads. Check the linked sources before submitting coursework." : "Use this as a study aid and verify important claims with your lecturer or library sources." } satisfies StudentResult };
   });
