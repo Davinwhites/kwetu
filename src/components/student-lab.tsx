@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Check, Copy, Download } from "lucide-react";
+import { useState, type ChangeEvent } from "react";
+import { Check, Copy, Download, ImagePlus, X } from "lucide-react";
+import { jsPDF } from "jspdf";
 import { runStudentAi, type StudentResult } from "@/lib/student-ai";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +24,7 @@ export function StudentLab() {
   const [busy, setBusy] = useState(false);
   const [downloadFormat, setDownloadFormat] = useState("txt");
   const [copied, setCopied] = useState(false);
+  const [image, setImage] = useState<{ name: string; mimeType: string; data: string; preview: string } | null>(null);
 
   function outputText() {
     if (!result) return "";
@@ -47,6 +49,16 @@ export function StudentLab() {
       html: { extension: "html", type: "text/html;charset=utf-8", content: `<!doctype html><meta charset="utf-8"><title>${course}</title><pre style="white-space:pre-wrap;font:16px system-ui">${text.replace(/[&<>]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[char] ?? char)}</pre>` },
       doc: { extension: "doc", type: "application/msword", content: `<html><body><h1>${course}</h1><pre>${text.replace(/[&<>]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[char] ?? char)}</pre></body></html>` },
     };
+    if (downloadFormat === "pdf") {
+      const pdf = new jsPDF();
+      const lines = pdf.splitTextToSize(text, 175);
+      pdf.setFontSize(16);
+      pdf.text(course || "Study answer", 18, 20);
+      pdf.setFontSize(10);
+      pdf.text(lines, 18, 32);
+      pdf.save(`${title}.pdf`);
+      return;
+    }
     const format = formats[downloadFormat] ?? formats.txt;
     const url = URL.createObjectURL(new Blob([format.content], { type: format.type }));
     const link = document.createElement("a");
@@ -56,6 +68,22 @@ export function StudentLab() {
     URL.revokeObjectURL(url);
   }
 
+  function handleImage(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/") || file.size > 6 * 1024 * 1024) {
+      setError("Choose an image smaller than 6 MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result);
+      setImage({ name: file.name, mimeType: file.type, data: dataUrl.split(",")[1] ?? "", preview: dataUrl });
+      setError("");
+    };
+    reader.readAsDataURL(file);
+  }
+
   async function submit() {
     const trimmedCourse = course.trim();
     const trimmedQuestion = question.trim();
@@ -63,8 +91,8 @@ export function StudentLab() {
       setError("Choose a course or subject first.");
       return;
     }
-    if (trimmedQuestion.length < 8) {
-      setError("Ask a more specific question first.");
+    if (trimmedQuestion.length < 8 && !image) {
+      setError("Ask a question or upload an image to review first.");
       return;
     }
 
@@ -73,7 +101,7 @@ export function StudentLab() {
     setResult(null);
     try {
       const response = await runStudentAi({
-        data: { question: trimmedQuestion, course: trimmedCourse, level, institution: institution.trim(), mode },
+        data: { question: trimmedQuestion, course: trimmedCourse, level, institution: institution.trim(), mode, image: image ? { name: image.name, mimeType: image.mimeType, data: image.data } : undefined },
       });
       if (response.ok) setResult(response.student);
       else setError(response.error);
@@ -104,9 +132,13 @@ export function StudentLab() {
         <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-border)] sm:p-6">
           <label className="text-sm font-medium">Your question or draft</label>
           <Textarea value={question} onChange={(e) => setQuestion(e.target.value)} className="mt-2 min-h-56 resize-y" placeholder="Ask a specific question, paste a paragraph for feedback, or share a small code snippet..." />
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm hover:bg-surface"><ImagePlus data-icon="inline-start" />Review an image<input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={handleImage} /></label>
+            {image ? <div className="flex items-center gap-2 rounded-md bg-surface px-2 py-1 text-xs"><img src={image.preview} alt="Selected study material" className="size-10 rounded object-cover" /><span className="max-w-40 truncate">{image.name}</span><button type="button" aria-label="Remove image" onClick={() => setImage(null)}><X /></button></div> : <span className="text-xs text-subtle">PNG, JPG, or WebP up to 6 MB</span>}
+          </div>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-subtle">Tip: include the exact topic, requirements, and what you have tried.</p><Button onClick={submit} disabled={busy || !course || question.trim().length < 8}>{busy ? "Researching..." : "Get study help"}</Button></div>
           {error ? <p role="alert" className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p> : null}
-          {result ? <article className="mt-8 border-t border-border pt-6"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-display text-2xl font-medium">Study answer</h2><div className="flex flex-wrap items-center gap-2"><Button type="button" variant="outline" size="sm" onClick={copyAnswer}>{copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}{copied ? "Copied" : "Copy"}</Button><select aria-label="Download format" value={downloadFormat} onChange={(event) => setDownloadFormat(event.target.value)} className="h-9 rounded-md border border-input bg-background px-2 text-sm"><option value="txt">Text (.txt)</option><option value="md">Markdown (.md)</option><option value="html">Web page (.html)</option><option value="doc">Word document (.doc)</option></select><Button type="button" size="sm" onClick={downloadAnswer}><Download data-icon="inline-start" />Download</Button></div></div><div className="mt-5 whitespace-pre-wrap text-sm leading-7">{result.answer}</div><p className="mt-6 rounded-lg bg-surface p-3 text-xs text-muted">{result.notice}</p>{result.sources.length ? <div className="mt-6"><h3 className="font-medium">Sources</h3><ul className="mt-2 space-y-2">{result.sources.map((source) => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">{source.title}</a><p className="text-xs text-subtle">{source.snippet}</p></li>)}</ul></div> : <p className="mt-6 text-xs text-subtle">No live sources were available for this answer. Verify important claims using your library or lecturer.</p>}</article> : null}
+          {result ? <article className="mt-8 border-t border-border pt-6"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-display text-2xl font-medium">Study answer</h2><div className="flex flex-wrap items-center gap-2"><Button type="button" variant="outline" size="sm" onClick={copyAnswer}>{copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}{copied ? "Copied" : "Copy"}</Button><select aria-label="Download format" value={downloadFormat} onChange={(event) => setDownloadFormat(event.target.value)} className="h-9 rounded-md border border-input bg-background px-2 text-sm"><option value="txt">Text (.txt)</option><option value="md">Markdown (.md)</option><option value="html">Web page (.html)</option><option value="doc">Word document (.doc)</option><option value="pdf">PDF (.pdf)</option></select><Button type="button" size="sm" onClick={downloadAnswer}><Download data-icon="inline-start" />Download</Button></div></div><div className="mt-5 whitespace-pre-wrap text-sm leading-7">{result.answer}</div><p className="mt-6 rounded-lg bg-surface p-3 text-xs text-muted">{result.notice}</p>{result.sources.length ? <div className="mt-6"><h3 className="font-medium">Sources</h3><ul className="mt-2 space-y-2">{result.sources.map((source) => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">{source.title}</a><p className="text-xs text-subtle">{source.snippet}</p></li>)}</ul></div> : <p className="mt-6 text-xs text-subtle">No live sources were available for this answer. Verify important claims using your library or lecturer.</p>}</article> : null}
         </section>
       </div>
     </main>
