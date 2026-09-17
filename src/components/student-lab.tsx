@@ -11,6 +11,7 @@ const modes = [
   ["explain", "Explain a concept"],
   ["coursework", "Review coursework"],
   ["code", "Study coding"],
+  ["image", "Create an image"],
 ] as const;
 
 export function StudentLab() {
@@ -27,6 +28,7 @@ export function StudentLab() {
   const [image, setImage] = useState<{ name: string; mimeType: string; data: string; preview: string } | null>(null);
   const [memories, setMemories] = useState<{ id: string; memory: string }[]>([]);
   const [showMemories, setShowMemories] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
 
   function outputText() {
     if (!result) return "";
@@ -114,11 +116,15 @@ export function StudentLab() {
     setBusy(true);
     setError("");
     setResult(null);
+    setGeneratedImageUrl(null);
     try {
       const response = await runStudentAi({
         data: { question: trimmedQuestion, course: trimmedCourse, level, institution: institution.trim(), mode, image: image ? { name: image.name, mimeType: image.mimeType, data: image.data } : undefined },
       });
-      if (response.ok) setResult(response.student);
+      if (response.ok) {
+        setResult(response.student);
+        if (response.student.generatedImage) setGeneratedImageUrl(`data:${response.student.generatedImage.mimeType};base64,${response.student.generatedImage.data}`);
+      }
       else setError(response.error);
     } catch {
       setError("The study assistant could not connect. Check your connection and try again.");
@@ -153,7 +159,7 @@ export function StudentLab() {
           </div>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-subtle">Tip: include the exact topic, requirements, and what you have tried.</p><Button onClick={submit} disabled={busy || !course || (question.trim().length < 8 && !image)}>{busy ? "Researching..." : "Get study help"}</Button></div>
           {error ? <p role="alert" className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p> : null}
-          {result ? <article className="mt-8 border-t border-border pt-6"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-display text-2xl font-medium">Study answer</h2><div className="flex flex-wrap items-center gap-2"><Button type="button" variant="outline" size="sm" onClick={copyAnswer}>{copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}{copied ? "Copied" : "Copy"}</Button><select aria-label="Download format" value={downloadFormat} onChange={(event) => setDownloadFormat(event.target.value)} className="h-9 rounded-md border border-input bg-background px-2 text-sm"><option value="txt">Text (.txt)</option><option value="md">Markdown (.md)</option><option value="html">Web page (.html)</option><option value="doc">Word document (.doc)</option><option value="pdf">PDF (.pdf)</option></select><Button type="button" size="sm" onClick={downloadAnswer}><Download data-icon="inline-start" />Download</Button></div></div><div className="kwetu-answer mt-5 whitespace-pre-wrap text-sm leading-7">{result.answer}</div><p className="mt-6 rounded-lg bg-surface p-3 text-xs text-muted">{result.notice}</p>{result.sources.length ? <div className="mt-6"><h3 className="font-medium">Sources</h3><ul className="mt-2 space-y-2">{result.sources.map((source) => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">{source.title}</a><p className="text-xs text-subtle">{source.snippet}</p></li>)}</ul></div> : <p className="mt-6 text-xs text-subtle">No live sources were available for this answer. Verify important claims using your library or lecturer.</p>}</article> : null}
+          {result ? <article className="mt-8 border-t border-border pt-6"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-display text-2xl font-medium">Study answer</h2><div className="flex flex-wrap items-center gap-2"><Button type="button" variant="outline" size="sm" onClick={copyAnswer}>{copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}{copied ? "Copied" : "Copy"}</Button><select aria-label="Download format" value={downloadFormat} onChange={(event) => setDownloadFormat(event.target.value)} className="h-9 rounded-md border border-input bg-background px-2 text-sm"><option value="txt">Text (.txt)</option><option value="md">Markdown (.md)</option><option value="html">Web page (.html)</option><option value="doc">Word document (.doc)</option><option value="pdf">PDF (.pdf)</option></select><Button type="button" size="sm" onClick={downloadAnswer}><Download data-icon="inline-start" />Download</Button></div></div><div className="kwetu-answer mt-5 whitespace-pre-wrap text-sm leading-7">{result.answer}</div>{generatedImageUrl ? <div className="mt-5 rounded-xl border border-border bg-surface p-3"><img src={generatedImageUrl} alt="AI-generated image" className="max-h-[32rem] w-full rounded-lg object-contain" /><a href={generatedImageUrl} download={`${course || "kwetu-generated-image"}.png`} className="mt-3 inline-flex rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-background">Download image</a></div> : null}<p className="mt-6 rounded-lg bg-surface p-3 text-xs text-muted">{result.notice}</p>{result.sources.length ? <div className="mt-6"><h3 className="font-medium">Sources</h3><ul className="mt-2 space-y-2">{result.sources.map((source) => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">{source.title}</a><p className="text-xs text-subtle">{source.snippet}</p></li>)}</ul></div> : <p className="mt-6 text-xs text-subtle">No live sources were available for this answer. Verify important claims using your library or lecturer.</p>}</article> : null}
         </section>
       </div>
     </main>
