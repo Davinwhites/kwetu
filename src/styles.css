@@ -73,6 +73,39 @@
     0px 2px 4px 0px rgba(28, 25, 21, 0.06);
 }
 
+.kwetu-answer {
+  color: #202123;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+.kwetu-answer strong,
+.kwetu-answer h1,
+.kwetu-answer h2,
+.kwetu-answer h3 {
+  color: #111827;
+  font-weight: 650;
+}
+
+.kwetu-answer code {
+  color: #7c3aed;
+  background: #f3f4f6;
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.3rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.kwetu-answer pre {
+  overflow-x: auto;
+  margin: 0.9rem 0;
+  padding: 0.9rem;
+  border-radius: 0.6rem;
+  background: #1f2937;
+  color: #f9fafb;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
