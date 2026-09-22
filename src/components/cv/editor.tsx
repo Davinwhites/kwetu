@@ -52,16 +52,16 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
     const contentWidth = pageWidth - margin * 2;
     let y = 20;
 
-    const addText = (text: string, size = 10, bold = false, gap = 5) => {
+    const addText = (text: string, size = 10, bold = false, gap = 5, x = margin, width = contentWidth) => {
       pdf.setFont("helvetica", bold ? "bold" : "normal");
       pdf.setFontSize(size);
-      const lines = pdf.splitTextToSize(text.trim(), contentWidth);
+      const lines = pdf.splitTextToSize(text.trim(), width);
       for (const line of lines) {
         if (y > 278) {
           pdf.addPage();
           y = 20;
         }
-        pdf.text(line, margin, y);
+        pdf.text(line, x, y);
         y += size * 0.45 + 1.5;
       }
       y += gap;
@@ -79,10 +79,23 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
     };
 
     const personal = cv.personal;
-    addText(personal.fullName || cv.name || "Curriculum Vitae", 20, true, 1);
-    if (personal.title.trim()) addText(personal.title, 11, false, 2);
+    const photoWidth = 30;
+    const headerWidth = personal.photoDataUrl.trim() ? contentWidth - photoWidth - 6 : contentWidth;
+
+    if (personal.photoDataUrl.trim()) {
+      try {
+        const format = personal.photoDataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
+        pdf.addImage(personal.photoDataUrl, format, pageWidth - margin - photoWidth, y, photoWidth, photoWidth);
+      } catch {
+        // Ignore invalid image data and keep the rest of the CV export usable.
+      }
+    }
+
+    addText(personal.fullName || cv.name || "Curriculum Vitae", 20, true, 1, margin, headerWidth);
+    if (personal.title.trim()) addText(personal.title, 11, false, 2, margin, headerWidth);
     const contacts = [personal.email, personal.phone, personal.location, personal.website].filter((value) => value.trim());
-    if (contacts.length) addText(contacts.join("  ·  "), 9, false, 7);
+    if (contacts.length) addText(contacts.join("  ·  "), 9, false, 7, margin, headerWidth);
+    if (personal.photoDataUrl.trim()) y = Math.max(y, 56);
 
     if (cv.summary.trim()) {
       addSection("Career objective");
@@ -133,6 +146,18 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
     if (extras.length) {
       addSection("Additional");
       extras.forEach((item) => addText(`${item.label ? `${item.label} · ` : ""}${item.value}`, 9, false, 1));
+    }
+
+    const referees = cv.referees.filter((item) => item.name.trim());
+    if (referees.length) {
+      addSection("Referees");
+      referees.forEach((item) => {
+        addText(item.name, 10, true, 1);
+        const role = [item.title, item.organisation].filter((value) => value.trim()).join(" · ");
+        const contact = [item.phone, item.email].filter((value) => value.trim()).join(" · ");
+        if (role) addText(role, 9, false, 1);
+        if (contact) addText(contact, 9, false, 2);
+      });
     }
 
     if (cv.coverLetter.trim()) {
