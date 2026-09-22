@@ -1,9 +1,9 @@
 export async function compressImageFile(file: File, maxEdge = 640, quality = 0.82): Promise<string> {
-  if (!file.type.startsWith("image/")) {
+  if (file.type && !file.type.startsWith("image/")) {
     throw new Error("Please choose a photo or a scan of your ID.");
   }
-  if (file.size > 8 * 1024 * 1024) {
-    throw new Error("That file is larger than 8 MB.");
+  if (file.size > 24 * 1024 * 1024) {
+    throw new Error("That file is larger than 24 MB.");
   }
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));

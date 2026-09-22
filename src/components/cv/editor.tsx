@@ -109,7 +109,15 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
       }
       addText(personal.fullName || cv.name || "Curriculum Vitae", 18, true, 1, left, headerWidth);
       if (personal.title.trim()) addText(personal.title, 10, false, 1, left, headerWidth);
-      if (contacts.length) addText(contacts.join("  ·  "), 8, false, 5, left, headerWidth);
+      if (contacts.length) addText(contacts.join("  ·  "), 8, false, 3, left, headerWidth);
+      
+      const partLabels = [];
+      if (personal.nationality?.trim()) partLabels.push(`Nationality: ${personal.nationality}`);
+      if (personal.dateOfBirth?.trim()) partLabels.push(`Date of birth: ${personal.dateOfBirth}`);
+      if (personal.gender?.trim()) partLabels.push(`Sex: ${personal.gender}`);
+      if (personal.nin?.trim()) partLabels.push(`NIN: ${personal.nin}`);
+      if (partLabels.length) addText(partLabels.join("  ·  "), 8, false, 5, left, headerWidth);
+
       if (personal.photoDataUrl.trim()) y = Math.max(y, 52);
 
       if (cv.summary.trim()) {
