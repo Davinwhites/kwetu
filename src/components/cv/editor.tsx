@@ -90,8 +90,8 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem className="sm:hidden" onSelect={printCv}>
-                <Printer className="size-4" />
-                Compile PDF
+                <Download className="size-4" />
+                Download PDF
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={exportJson}>
                 <Download className="size-4" />
@@ -193,8 +193,8 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
             <div className="mb-3 flex items-center justify-between">
               <p className="text-xs font-medium uppercase tracking-wide text-muted">Compiled page</p>
               <Button size="sm" variant="outline" className="lg:hidden" onClick={printCv}>
-                <Printer />
-                PDF
+                <Download />
+                Download PDF
               </Button>
             </div>
             <CvStage cv={cv} />
