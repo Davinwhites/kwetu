@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { jsPDF } from "jspdf";
 import { Button } from "@/components/ui/button";
 import { CoachPanel } from "@/components/cv/coach";
 import { EditorForm } from "@/components/cv/form";
@@ -44,8 +45,104 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
   const score = useMemo(() => scoreCv(cv), [cv]);
   useCvAutosave(cv.id);
 
-  function printCv() {
-    window.print();
+  function downloadPdf() {
+    const pdf = new jsPDF({ unit: "mm", format: "a4" });
+    const margin = 18;
+    const pageWidth = 210;
+    const contentWidth = pageWidth - margin * 2;
+    let y = 20;
+
+    const addText = (text: string, size = 10, bold = false, gap = 5) => {
+      pdf.setFont("helvetica", bold ? "bold" : "normal");
+      pdf.setFontSize(size);
+      const lines = pdf.splitTextToSize(text.trim(), contentWidth);
+      for (const line of lines) {
+        if (y > 278) {
+          pdf.addPage();
+          y = 20;
+        }
+        pdf.text(line, margin, y);
+        y += size * 0.45 + 1.5;
+      }
+      y += gap;
+    };
+
+    const addSection = (title: string) => {
+      if (y > 268) {
+        pdf.addPage();
+        y = 20;
+      }
+      pdf.setDrawColor(210, 210, 210);
+      pdf.line(margin, y, pageWidth - margin, y);
+      y += 6;
+      addText(title.toUpperCase(), 10, true, 3);
+    };
+
+    const personal = cv.personal;
+    addText(personal.fullName || cv.name || "Curriculum Vitae", 20, true, 1);
+    if (personal.title.trim()) addText(personal.title, 11, false, 2);
+    const contacts = [personal.email, personal.phone, personal.location, personal.website].filter((value) => value.trim());
+    if (contacts.length) addText(contacts.join("  ·  "), 9, false, 7);
+
+    if (cv.summary.trim()) {
+      addSection("Career objective");
+      addText(cv.summary, 10, false, 4);
+    }
+
+    const experiences = cv.experience.filter((item) => item.company.trim() || item.role.trim());
+    if (experiences.length) {
+      addSection("Experience");
+      experiences.forEach((item) => {
+        addText(`${item.role || "Role"}${item.company ? ` · ${item.company}` : ""}`, 10, true, 1);
+        const dates = [item.start, item.current ? "Present" : item.end].filter(Boolean).join(" – ");
+        if (dates || item.location.trim()) addText([item.location, dates].filter(Boolean).join("  ·  "), 9, false, 1);
+        item.bullets.filter((bullet) => bullet.trim()).forEach((bullet) => addText(`• ${bullet}`, 9, false, 1));
+        y += 3;
+      });
+    }
+
+    const education = cv.education.filter((item) => item.school.trim());
+    if (education.length) {
+      addSection("Education");
+      education.forEach((item) => {
+        addText(`${item.school}${item.degree || item.field ? ` · ${[item.degree, item.field].filter(Boolean).join(" ")}` : ""}`, 10, true, 1);
+        if (item.details.trim()) addText(item.details, 9, false, 1);
+        y += 3;
+      });
+    }
+
+    const projects = cv.projects.filter((item) => item.name.trim());
+    if (projects.length) {
+      addSection("Projects");
+      projects.forEach((item) => {
+        addText(`${item.name}${item.url ? ` · ${item.url}` : ""}`, 10, true, 1);
+        if (item.summary.trim()) addText(item.summary, 9, false, 1);
+        item.bullets.filter((bullet) => bullet.trim()).forEach((bullet) => addText(`• ${bullet}`, 9, false, 1));
+        y += 3;
+      });
+    }
+
+    const skills = cv.skills.filter((item) => item.items.trim());
+    if (skills.length) {
+      addSection("Skills");
+      skills.forEach((item) => addText(`${item.category ? `${item.category} · ` : ""}${item.items}`, 9, false, 1));
+      y += 3;
+    }
+
+    const extras = cv.extras.filter((item) => item.value.trim());
+    if (extras.length) {
+      addSection("Additional");
+      extras.forEach((item) => addText(`${item.label ? `${item.label} · ` : ""}${item.value}`, 9, false, 1));
+    }
+
+    if (cv.coverLetter.trim()) {
+      addSection("Cover letter");
+      addText(cv.coverLetter, 10, false, 2);
+    }
+
+    const filename = `${(personal.fullName || cv.name || "cv").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "cv"}.pdf`;
+    pdf.save(filename);
+    toast.success("PDF downloaded");
   }
 
   function exportJson() {
@@ -78,7 +175,7 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
             <Sparkles />
             Coach
           </Button>
-          <Button size="sm" variant="secondary" className="hidden sm:inline-flex" onClick={printCv}>
+          <Button size="sm" variant="secondary" className="hidden sm:inline-flex" onClick={downloadPdf}>
             <Printer />
             Compile PDF
           </Button>
@@ -89,7 +186,7 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem className="sm:hidden" onSelect={printCv}>
+              <DropdownMenuItem className="sm:hidden" onSelect={downloadPdf}>
                 <Download className="size-4" />
                 Download PDF
               </DropdownMenuItem>
@@ -192,7 +289,7 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
           <div className="sticky top-[57px] max-h-[calc(100dvh-57px)] overflow-auto p-3 sm:p-5">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-xs font-medium uppercase tracking-wide text-muted">Compiled page</p>
-              <Button size="sm" variant="outline" className="lg:hidden" onClick={printCv}>
+              <Button size="sm" variant="outline" className="lg:hidden" onClick={downloadPdf}>
                 <Download />
                 Download PDF
               </Button>
