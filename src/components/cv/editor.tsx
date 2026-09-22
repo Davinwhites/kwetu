@@ -46,128 +46,158 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
   useCvAutosave(cv.id);
 
   function downloadPdf() {
-    const pdf = new jsPDF({ unit: "mm", format: "a4" });
-    const margin = 18;
     const pageWidth = 210;
-    const contentWidth = pageWidth - margin * 2;
-    let y = 20;
-
-    const addText = (text: string, size = 10, bold = false, gap = 5, x = margin, width = contentWidth) => {
-      pdf.setFont("helvetica", bold ? "bold" : "normal");
-      pdf.setFontSize(size);
-      const lines = pdf.splitTextToSize(text.trim(), width);
-      for (const line of lines) {
-        if (y > 278) {
-          pdf.addPage();
-          y = 20;
-        }
-        pdf.text(line, x, y);
-        y += size * 0.45 + 1.5;
-      }
-      y += gap;
-    };
-
-    const addSection = (title: string) => {
-      if (y > 268) {
-        pdf.addPage();
-        y = 20;
-      }
-      pdf.setDrawColor(210, 210, 210);
-      pdf.line(margin, y, pageWidth - margin, y);
-      y += 6;
-      addText(title.toUpperCase(), 10, true, 3);
-    };
-
+    const pageHeight = 297;
+    const margin = 14;
     const personal = cv.personal;
     const photoWidth = 30;
-    const headerWidth = personal.photoDataUrl.trim() ? contentWidth - photoWidth - 6 : contentWidth;
-
-    if (personal.photoDataUrl.trim()) {
-      try {
-        const format = personal.photoDataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
-        pdf.addImage(personal.photoDataUrl, format, pageWidth - margin - photoWidth, y, photoWidth, photoWidth);
-      } catch {
-        // Ignore invalid image data and keep the rest of the CV export usable.
-      }
-    }
-
-    addText(personal.fullName || cv.name || "Curriculum Vitae", 20, true, 1, margin, headerWidth);
-    if (personal.title.trim()) addText(personal.title, 11, false, 2, margin, headerWidth);
-    const contacts = [personal.email, personal.phone, personal.location, personal.website].filter((value) => value.trim());
-    if (contacts.length) addText(contacts.join("  ·  "), 9, false, 7, margin, headerWidth);
-    if (personal.photoDataUrl.trim()) y = Math.max(y, 56);
-
-    if (cv.summary.trim()) {
-      addSection("Career objective");
-      addText(cv.summary, 10, false, 4);
-    }
-
+    const contacts = [personal.email, personal.phone, personal.location, personal.website].filter(
+      (value) => value.trim(),
+    );
     const experiences = cv.experience.filter((item) => item.company.trim() || item.role.trim());
-    if (experiences.length) {
-      addSection("Experience");
-      experiences.forEach((item) => {
-        addText(`${item.role || "Role"}${item.company ? ` · ${item.company}` : ""}`, 10, true, 1);
-        const dates = [item.start, item.current ? "Present" : item.end].filter(Boolean).join(" – ");
-        if (dates || item.location.trim()) addText([item.location, dates].filter(Boolean).join("  ·  "), 9, false, 1);
-        item.bullets.filter((bullet) => bullet.trim()).forEach((bullet) => addText(`• ${bullet}`, 9, false, 1));
-        y += 3;
-      });
-    }
-
     const education = cv.education.filter((item) => item.school.trim());
-    if (education.length) {
-      addSection("Education");
-      education.forEach((item) => {
-        addText(`${item.school}${item.degree || item.field ? ` · ${[item.degree, item.field].filter(Boolean).join(" ")}` : ""}`, 10, true, 1);
-        if (item.details.trim()) addText(item.details, 9, false, 1);
-        y += 3;
-      });
-    }
-
     const projects = cv.projects.filter((item) => item.name.trim());
-    if (projects.length) {
-      addSection("Projects");
-      projects.forEach((item) => {
-        addText(`${item.name}${item.url ? ` · ${item.url}` : ""}`, 10, true, 1);
-        if (item.summary.trim()) addText(item.summary, 9, false, 1);
-        item.bullets.filter((bullet) => bullet.trim()).forEach((bullet) => addText(`• ${bullet}`, 9, false, 1));
-        y += 3;
-      });
-    }
-
     const skills = cv.skills.filter((item) => item.items.trim());
-    if (skills.length) {
-      addSection("Skills");
-      skills.forEach((item) => addText(`${item.category ? `${item.category} · ` : ""}${item.items}`, 9, false, 1));
-      y += 3;
-    }
-
     const extras = cv.extras.filter((item) => item.value.trim());
-    if (extras.length) {
-      addSection("Additional");
-      extras.forEach((item) => addText(`${item.label ? `${item.label} · ` : ""}${item.value}`, 9, false, 1));
-    }
-
     const referees = cv.referees.filter((item) => item.name.trim());
-    if (referees.length) {
-      addSection("Referees");
-      referees.forEach((item) => {
-        addText(item.name, 10, true, 1);
-        const role = [item.title, item.organisation].filter((value) => value.trim()).join(" · ");
-        const contact = [item.phone, item.email].filter((value) => value.trim()).join(" · ");
-        if (role) addText(role, 9, false, 1);
-        if (contact) addText(contact, 9, false, 2);
-      });
+
+    function render(pdf: jsPDF, scale: number) {
+      const contentWidth = (pageWidth - margin * 2) / scale;
+      const left = margin / scale;
+      let y = 18 / scale;
+      const addText = (
+        text: string,
+        size = 10,
+        bold = false,
+        gap = 4,
+        x = left,
+        width = contentWidth,
+      ) => {
+        pdf.setFont("helvetica", bold ? "bold" : "normal");
+        pdf.setFontSize(size * scale);
+        const lines = pdf.splitTextToSize(text.trim(), width);
+        for (const line of lines) {
+          pdf.text(line, x * scale, y * scale);
+          y += size * 0.42 + 1.2;
+        }
+        y += gap;
+      };
+      const addSection = (title: string) => {
+        pdf.setDrawColor(210, 210, 210);
+        pdf.line(margin, y * scale, pageWidth - margin, y * scale);
+        y += 5;
+        addText(title.toUpperCase(), 9, true, 2);
+      };
+      const headerWidth = personal.photoDataUrl.trim()
+        ? contentWidth - photoWidth - 6 / scale
+        : contentWidth;
+
+      if (personal.photoDataUrl.trim()) {
+        try {
+          const format = personal.photoDataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
+          pdf.addImage(
+            personal.photoDataUrl,
+            format,
+            pageWidth - margin - photoWidth,
+            y * scale,
+            photoWidth,
+            photoWidth,
+          );
+        } catch {
+          // Keep the export usable when an uploaded image is invalid.
+        }
+      }
+      addText(personal.fullName || cv.name || "Curriculum Vitae", 18, true, 1, left, headerWidth);
+      if (personal.title.trim()) addText(personal.title, 10, false, 1, left, headerWidth);
+      if (contacts.length) addText(contacts.join("  ·  "), 8, false, 5, left, headerWidth);
+      if (personal.photoDataUrl.trim()) y = Math.max(y, 52);
+
+      if (cv.summary.trim()) {
+        addSection("Career objective");
+        addText(cv.summary, 9, false, 3);
+      }
+      if (experiences.length) {
+        addSection("Experience");
+        experiences.forEach((item) => {
+          addText(`${item.role || "Role"}${item.company ? ` · ${item.company}` : ""}`, 9, true, 1);
+          const dates = [item.start, item.current ? "Present" : item.end]
+            .filter(Boolean)
+            .join(" – ");
+          if (dates || item.location.trim())
+            addText([item.location, dates].filter(Boolean).join("  ·  "), 8, false, 1);
+          item.bullets
+            .filter((bullet) => bullet.trim())
+            .forEach((bullet) => addText(`• ${bullet}`, 8, false, 1));
+          y += 2;
+        });
+      }
+      if (education.length) {
+        addSection("Education");
+        education.forEach((item) => {
+          addText(
+            `${item.school}${item.degree || item.field ? ` · ${[item.degree, item.field].filter(Boolean).join(" ")}` : ""}`,
+            9,
+            true,
+            1,
+          );
+          if (item.details.trim()) addText(item.details, 8, false, 1);
+          y += 2;
+        });
+      }
+      if (projects.length) {
+        addSection("Projects");
+        projects.forEach((item) => {
+          addText(`${item.name}${item.url ? ` · ${item.url}` : ""}`, 9, true, 1);
+          if (item.summary.trim()) addText(item.summary, 8, false, 1);
+          item.bullets
+            .filter((bullet) => bullet.trim())
+            .forEach((bullet) => addText(`• ${bullet}`, 8, false, 1));
+          y += 2;
+        });
+      }
+      if (skills.length) {
+        addSection("Skills");
+        skills.forEach((item) =>
+          addText(`${item.category ? `${item.category} · ` : ""}${item.items}`, 8, false, 1),
+        );
+        y += 2;
+      }
+      if (extras.length) {
+        addSection("Additional");
+        extras.forEach((item) =>
+          addText(`${item.label ? `${item.label} · ` : ""}${item.value}`, 8, false, 1),
+        );
+      }
+      if (referees.length) {
+        addSection("Referees");
+        referees.forEach((item) => {
+          addText(item.name, 9, true, 1);
+          const role = [item.title, item.organisation].filter((value) => value.trim()).join(" · ");
+          const contact = [item.phone, item.email].filter((value) => value.trim()).join(" · ");
+          if (role) addText(role, 8, false, 1);
+          if (contact) addText(contact, 8, false, 1);
+        });
+      }
+      if (cv.coverLetter.trim()) {
+        addSection("Cover letter");
+        addText(cv.coverLetter, 9, false, 2);
+      }
+      return y;
     }
 
-    if (cv.coverLetter.trim()) {
-      addSection("Cover letter");
-      addText(cv.coverLetter, 10, false, 2);
-    }
-
-    const filename = `${(personal.fullName || cv.name || "cv").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "cv"}.pdf`;
+    const measurement = new jsPDF({ unit: "mm", format: "a4" });
+    const measuredHeight = render(measurement, 1);
+    const scale = Math.min(1, (pageHeight - margin - 4) / measuredHeight);
+    const pdf = new jsPDF({ unit: "mm", format: "a4" });
+    render(pdf, scale);
+    const filename = `${
+      (personal.fullName || cv.name || "cv")
+        .replace(/[^a-z0-9]+/gi, "-")
+        .replace(/^-|-$/g, "")
+        .toLowerCase() || "cv"
+    }.pdf`;
     pdf.save(filename);
-    toast.success("PDF downloaded");
+    toast.success(scale < 0.75 ? "PDF downloaded and fitted to one page" : "PDF downloaded");
   }
 
   function exportJson() {
@@ -196,11 +226,21 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
           <Badge variant="good" className="tabular-nums">
             {score.total}
           </Badge>
-          <Button size="sm" variant="ghost" className="hidden lg:inline-flex" onClick={() => setCoachOpen(true)}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="hidden lg:inline-flex"
+            onClick={() => setCoachOpen(true)}
+          >
             <Sparkles />
             Coach
           </Button>
-          <Button size="sm" variant="secondary" className="hidden sm:inline-flex" onClick={downloadPdf}>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="hidden sm:inline-flex"
+            onClick={downloadPdf}
+          >
             <Printer />
             Compile PDF
           </Button>
@@ -273,18 +313,27 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
                 onClick={() => setSection(s.id)}
                 className={cn(
                   "flex h-11 w-full items-center rounded-lg px-3 text-left text-sm font-medium transition-colors duration-[var(--motion-quick)]",
-                  section === s.id ? "bg-primary text-primary-foreground" : "text-muted hover:bg-surface hover:text-foreground",
+                  section === s.id
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted hover:bg-surface hover:text-foreground",
                 )}
               >
                 {s.label}
               </button>
             ))}
-            <p className="px-3 pt-6 text-xs font-medium uppercase tracking-wide text-subtle">Template</p>
+            <p className="px-3 pt-6 text-xs font-medium uppercase tracking-wide text-subtle">
+              Template
+            </p>
             <TemplatePicker value={cv.template} onChange={(t) => setTemplate(cv.id, t)} />
           </div>
         </nav>
 
-        <section className={cn("min-w-0 border-r border-border", pane === "preview" ? "hidden lg:block" : "block")}>
+        <section
+          className={cn(
+            "min-w-0 border-r border-border",
+            pane === "preview" ? "hidden lg:block" : "block",
+          )}
+        >
           <div className="xl:hidden">
             <div className="flex gap-1 overflow-x-auto px-3 py-2">
               {SECTIONS.map((s) => (
@@ -294,7 +343,9 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
                   onClick={() => setSection(s.id)}
                   className={cn(
                     "h-11 shrink-0 rounded-full px-4 text-sm font-medium",
-                    section === s.id ? "bg-primary text-primary-foreground" : "bg-surface text-muted",
+                    section === s.id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-surface text-muted",
                   )}
                 >
                   {s.label}
@@ -310,10 +361,14 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
           </div>
         </section>
 
-        <aside className={cn("min-w-0 bg-surface/60", pane === "write" ? "hidden lg:block" : "block")}>
+        <aside
+          className={cn("min-w-0 bg-surface/60", pane === "write" ? "hidden lg:block" : "block")}
+        >
           <div className="sticky top-[57px] max-h-[calc(100dvh-57px)] overflow-auto p-3 sm:p-5">
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted">Compiled page</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted">
+                Compiled page
+              </p>
               <Button size="sm" variant="outline" className="lg:hidden" onClick={downloadPdf}>
                 <Download />
                 Download PDF
@@ -322,7 +377,9 @@ export function EditorWorkspace({ cv }: { cv: CV }) {
             <CvStage cv={cv} />
             {cv.coverLetter.trim() ? (
               <article className="mt-6 rounded-xl bg-paper p-5 text-sm leading-relaxed shadow-[var(--shadow-border)]">
-                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Cover letter</p>
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">
+                  Cover letter
+                </p>
                 <pre className="whitespace-pre-wrap font-sans">{cv.coverLetter}</pre>
               </article>
             ) : null}
@@ -370,7 +427,9 @@ function TemplatePicker({
           onClick={() => onChange(id)}
           className={cn(
             "h-11 shrink-0 rounded-lg px-3 text-left text-sm transition-colors duration-[var(--motion-quick)] xl:h-auto xl:py-2",
-            value === id ? "bg-card text-foreground shadow-[var(--shadow-border)]" : "text-muted hover:text-foreground",
+            value === id
+              ? "bg-card text-foreground shadow-[var(--shadow-border)]"
+              : "text-muted hover:text-foreground",
           )}
         >
           <span className="block font-medium">{TEMPLATE_META[id].label}</span>
