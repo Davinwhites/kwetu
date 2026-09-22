@@ -156,7 +156,7 @@ async function chat(
       contents: [{ role: "user", parts }],
       generationConfig: { temperature: 0.4, maxOutputTokens: maxTokens },
     };
-    for (const model of ["gemma-4-26b-a4b-it", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]) {
+    for (const model of ["gemini-3.6-flash"]) {
       res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey },
@@ -183,7 +183,7 @@ async function chat(
       return { ok: false as const, error: "The configured Gemini API key is invalid or unavailable." };
     }
     if (res.status === 404) {
-      return { ok: false as const, error: "Gemini is unavailable for the configured API key. Replace GEMINI_API_KEY with a valid Google AI Studio key." };
+      return { ok: false as const, error: "The configured Gemini model is unavailable. Please try again later." };
     }
     return { ok: false as const, error: `AI error ${res.status}` };
   }
